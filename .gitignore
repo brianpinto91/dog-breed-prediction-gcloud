@@ -1,0 +1,7 @@
+notes.txt
+__pycache__/
+*.pyc
+data/train/*
+data/test/*
+model/temp/
+.ipynb_checkpoints
