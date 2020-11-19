@@ -8,4 +8,3 @@ logs/
 .ipynb_checkpoints
 *.h5
 env_variables.txt
-Makefile
