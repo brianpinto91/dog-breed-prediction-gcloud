@@ -1,7 +1,7 @@
 import argparse
 import utils
 import torch
-
+import pandas as pd
 
 def get_args():
     parser = argparse.ArgumentParser("training hyperparameters")
@@ -49,16 +49,38 @@ def get_args():
         help="coefficients used for computing running averages of the square of the gradient in Adam's optimizer (default: 0.99)"
     )
     parser.add_argument(
+        '--log_interval',
+        type=int,
+        default=10,
+        metavar="L",
+        help="logging interval i.e the number of minibatches after which the metrics are logged"
+    )
+    parser.add_argument(
         '--use_cuda',
         action='store_false',
         default=False,
         help="whether to train on cuda"
     )
     parser.add_argument(
+        '--data_dir',
+        type=str,
+        default='../data',
+        metavar='D',
+        help="location of the directory containing train.h5 and test.h5 files"
+    )
+    parser.add_argument(
         '--model_dir',
-        default=None,
+        type=str,
+        default='../models',
         metavar='MD',
         help="direcory to save the model (default: None)"
+    )
+    parser.add_argument(
+        '--log_dir',
+        type=str,
+        default='../logs',
+        metavar='LOG',
+        help="location of the directory where the training log is to be saved"
     )
     parser.add_argument(
         '--seed',
@@ -76,26 +98,26 @@ def test(model, test_loader, loss_func, device):
     correct_preds = 0
     model.eval()
     with torch.no_grad():
-        for batch_idx, (_, features, labels) in enumerate(test_loader):
+        for batch_idx, (features, labels) in enumerate(test_loader):
             features, labels = features.to(device), labels.to(device)
             outputs = model(features)
             predictions = torch.argmax(outputs, dim=1)
-            correct_preds += torch.sum(predictions == labels).item()
+            correct_preds += torch.sum(predictions==labels).item()
             running_loss += loss_func(outputs, labels).item()
-    loss = running_loss/batch_idx
-    accuracy = 100.0 * correct_preds/len(test_loader.dataset)
+    loss = running_loss / (batch_idx + 1)
+    accuracy = 100.0 * correct_preds / len(test_loader.dataset)
     return loss, accuracy
 
 
-def train(model, train_loader, test_loader, epochs, loss_func, optimizer, device):
+def train(args, model, train_loader, test_loader, loss_func, optimizer, device):
     best_model_wts = model.state_dict()
     best_test_accuracy = 0.0
     best_epoch = 0
-
-    train_running_loss = 0.0
-    train_correct_preds = 0
-    for epoch in range(epochs):
-        for batch_idx, (_, features, labels) in enumerate(train_loader):
+    log_list = []
+    for epoch in range(args.epochs):
+        train_running_loss = 0.0
+        train_correct_preds = 0
+        for batch_idx, (features, labels) in enumerate(train_loader):
             features, labels = features.to(device), labels.to(device)
             optimizer.zero_grad()
             outputs = model(features)
@@ -103,29 +125,34 @@ def train(model, train_loader, test_loader, epochs, loss_func, optimizer, device
             loss.backward()
             optimizer.step()
 
-            # metrics
             predictions = torch.argmax(outputs, dim=1)
-            train_correct_preds += torch.sum(predictions == labels).item()
-            train_running_loss += loss_func(outputs, labels).item()
-
-        # logging
-        train_loss = train_running_loss/batch_idx
-        train_accuracy = 100.0 * train_correct_preds/len(train_loader.dataset)
+            train_correct_preds += torch.sum(predictions==labels).item()
+            train_running_loss += loss.item()
+            if (batch_idx % args.log_interval == 0):
+              print("Epoch {}:\tBatch: [{}/{}]:\tRunning avg loss: {:.6f}".format(epoch + 1,
+                    batch_idx, int(len(train_loader.dataset)/train_loader.batch_size),
+                    train_running_loss / (batch_idx+1)))
+        #logging
+        train_loss = train_running_loss / (batch_idx + 1) 
+        train_accuracy = 100.0 * train_correct_preds / len(train_loader.dataset)
         test_loss, test_accuracy = test(model, test_loader, loss_func, device)
+        log_list.append([epoch + 1, train_loss, test_loss, train_accuracy, test_accuracy])
         print("*******Epoch: [{}/{}]*******\nTrain loss: {:.6f}\tTrain accuracy: {:.2f}\nTest loss: {:.6f}\tTest accuracy: {:.2f}".format(
-               epoch, epochs, train_loss, train_accuracy, test_loss, test_accuracy))
-
-        # saving best model
+               epoch + 1, args.epochs, train_loss, train_accuracy, test_loss, test_accuracy))
+        #saving best model
         if test_accuracy > best_test_accuracy:
             best_model_wts = model.state_dict()
-            best_epoch = epoch
+            best_epoch = epoch + 1 # epoch starts from zero
             best_train_accuracy = train_accuracy
             best_test_accuracy = test_accuracy
-
-        performance_metrics = {'optimal_epoch': best_epoch,
-                               'train_accuracy': best_train_accuracy,
-                               'test_accuracy': best_test_accuracy}
-    return model.load_state_dict(best_model_wts), performance_metrics
+        
+        best_performance_metrics = {'optimal_epoch': best_epoch,
+                                'train_accuracy': best_train_accuracy,
+                                 'test_accuracy': best_test_accuracy}
+    model.load_state_dict(best_model_wts)
+    log_df = pd.DataFrame(log_list, 
+                          columns=['epoch', 'train_loss', 'test_loss', 'train_accuracy', 'test_accuracy'])
+    return model, best_performance_metrics, log_df
 
 
 if __name__ == "__main__":
@@ -139,13 +166,19 @@ if __name__ == "__main__":
 
     torch.manual_seed(args.seed)
 
-    train_set = utils.ImageDataset(utils.train_dir, utils.train_labels_df, True)
+    train_file_path, test_file_path = utils.get_data_paths(args)
+
+    train_set = utils.ImageDataset(train_file_path)
     train_loader = utils.ImageLoader(train_set, args.batch_size, True)
 
-    test_set = utils.ImageDataset(utils.test_dir, utils.test_labels_df, True)
+    test_set = utils.ImageDataset(test_file_path)
     test_loader = utils.ImageLoader(test_set, args.test_batch_size, False)
 
     model = utils.Model().to(device)
     loss_func = torch.nn.CrossEntropyLoss(reduction='mean')
     optimizer = torch.optim.Adam(model.fc.parameters(), lr=args.lr)
-    model, metrics = train(model, train_loader, test_loader, args.epochs, loss_func, optimizer, device)
+    model, best_performance_metrics, log_df = train(args, model, train_loader, test_loader, loss_func, optimizer, device)
+    utils.save_model(args, model)
+    utils.save_job_log(args, log_df)
+    utils.save_train_metadata(args, best_performance_metrics)
+    
