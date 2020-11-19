@@ -3,5 +3,9 @@ __pycache__/
 *.pyc
 data/train/*
 data/test/*
-model/temp/
+models/
+logs/
 .ipynb_checkpoints
+*.h5
+env_variables.txt
+Makefile
