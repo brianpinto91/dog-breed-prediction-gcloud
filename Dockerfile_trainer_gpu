@@ -1,0 +1,43 @@
+FROM nvidia/cuda:10.2-cudnn7-runtime-ubuntu18.04
+
+# install wget which is required to install gcloud cli
+RUN apt-get update && apt-get install -y python3\.6 python3-pip wget sudo \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /root
+
+# install gcloud cli which is required to upload the model and logs after training usings gsutil
+RUN wget -nv \
+    https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz && \
+    mkdir /root/tools && \
+    tar xvzf google-cloud-sdk.tar.gz -C /root/tools && \
+    rm google-cloud-sdk.tar.gz && \
+    /root/tools/google-cloud-sdk/install.sh --usage-reporting=false \
+        --path-update=false --bash-completion=false \
+        --disable-installation-options && \
+    rm -rf /root/.config/* && \
+    ln -s /root/.config /config && \
+    # Remove the backup directory that gcloud creates
+    rm -rf /root/tools/google-cloud-sdk/.install/.backup
+
+# Path configuration
+ENV PATH $PATH:/root/tools/google-cloud-sdk/bin
+
+# Make sure gsutil will use the default service account
+RUN echo '[GoogleCompute]\nservice_account = default' > /etc/boto.cfg
+
+WORKDIR /task
+
+#copy source code and data
+COPY . .
+
+#local directories for temporary use
+RUN mkdir data && mkdir models && mkdir logs
+
+#Installs python packages and dependencies
+RUN pip3 install --no-cache-dir -r requirements.txt
+RUN python3 --version
+
+WORKDIR /task/training
+
+ENTRYPOINT ["python3", "trainer.py"]
