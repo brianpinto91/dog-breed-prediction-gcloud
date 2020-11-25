@@ -57,7 +57,7 @@ def get_args():
     )
     parser.add_argument(
         '--use_cuda',
-        action='store_false',
+        action='store_true',
         default=False,
         help="whether to train on cuda"
     )
@@ -131,14 +131,14 @@ def train(args, model, train_loader, test_loader, loss_func, optimizer, device):
             if (batch_idx % args.log_interval == 0):
               print("Epoch {}:\tBatch: [{}/{}]:\tRunning avg loss: {:.6f}".format(epoch + 1,
                     batch_idx, int(len(train_loader.dataset)/train_loader.batch_size),
-                    train_running_loss / (batch_idx+1)))
+                    train_running_loss / (batch_idx+1)), flush=True)
         #logging
         train_loss = train_running_loss / (batch_idx + 1) 
         train_accuracy = 100.0 * train_correct_preds / len(train_loader.dataset)
         test_loss, test_accuracy = test(model, test_loader, loss_func, device)
         log_list.append([epoch + 1, train_loss, test_loss, train_accuracy, test_accuracy])
         print("*******Epoch: [{}/{}]*******\nTrain loss: {:.6f}\tTrain accuracy: {:.2f}\nTest loss: {:.6f}\tTest accuracy: {:.2f}".format(
-               epoch + 1, args.epochs, train_loss, train_accuracy, test_loss, test_accuracy))
+               epoch + 1, args.epochs, train_loss, train_accuracy, test_loss, test_accuracy), flush=True)
         #saving best model
         if test_accuracy > best_test_accuracy:
             best_model_wts = model.state_dict()
@@ -168,10 +168,10 @@ if __name__ == "__main__":
 
     train_file_path, test_file_path = utils.get_data_paths(args)
 
-    train_set = utils.ImageDataset(train_file_path)
+    train_set = utils.ImageDataset(train_file_path, aug_images=True)
     train_loader = utils.ImageLoader(train_set, args.batch_size, True)
 
-    test_set = utils.ImageDataset(test_file_path)
+    test_set = utils.ImageDataset(test_file_path, aug_images=False)
     test_loader = utils.ImageLoader(test_set, args.test_batch_size, False)
 
     model = utils.Model().to(device)
