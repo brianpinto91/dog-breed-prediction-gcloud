@@ -29,18 +29,22 @@ class ImageDataset(Dataset):
 
     def image_transformer(self):
         if self.aug_images:
-            transformer = transforms.Compose([
-                transforms.RandomPerspective(distortion_scale=0.3, p=0.2, fill=0),
-                transforms.RandomHorizontalFlip(),
-                transforms.ToTensor(),
-                transforms.Normalize(mean=[0.476, 0.452, 0.392],
-                                 std=[0.235, 0.231, 0.229])
+            transform_list = [transforms.RandomPerspective(distortion_scale=0.3, p=0.2, fill=0),
+                              transforms.RandomHorizontalFlip(),
+                              transforms.ColorJitter(brightness=0.4, contrast=0.4),
+                              transforms.RandomRotation(30),
+                              transforms.RandomResizedCrop((224,224))]
+            
+            transformer = transforms.Compose([transforms.RandomApply(transform_list, p=0.2),
+                                             transforms.ToTensor(),
+                                             transforms.Normalize(mean=[0.476, 0.452, 0.392],
+                                                                  std=[0.235, 0.231, 0.229])
             ])
         else:
             transformer = transforms.Compose([
                 transforms.ToTensor(),
                 transforms.Normalize(mean=[0.476, 0.452, 0.392],
-                             std=[0.235, 0.231, 0.229])
+                                     std=[0.235, 0.231, 0.229])
             ])
         return transformer
 
