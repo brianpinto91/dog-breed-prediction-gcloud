@@ -1,10 +1,8 @@
-notes.txt
 __pycache__/
 *.pyc
-data/train/*
-data/test/*
+data/Images
 models/
 logs/
 .ipynb_checkpoints
-*.h5
-env_variables.txt
+train.h5
+test.h5

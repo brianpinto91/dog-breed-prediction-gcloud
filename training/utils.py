@@ -112,13 +112,12 @@ def save_job_log(args, log_df):
 
 
 def save_train_metadata(args, best_performance_metrics):
-    metadata_file_name = "metadata.txt"
+    metadata_file_name = "metadata.json"
     local_save_path = os.path.join("../logs", metadata_file_name)
     metadata = vars(args)
     metadata.update(best_performance_metrics)
-    metadata_json = json.dumps(metadata)
     with open(local_save_path, 'w') as outfile:
-        json.dump(metadata_json, outfile)
+        json.dump(metadata, outfile)
     if args.log_dir[0:2] == "gs":
         try:
             subprocess.check_call(['gsutil', 'cp', local_save_path,
