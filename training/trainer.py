@@ -169,10 +169,10 @@ if __name__ == "__main__":
     train_file_path, test_file_path = utils.get_data_paths(args)
 
     train_set = utils.ImageDataset(train_file_path, aug_images=True)
-    train_loader = utils.ImageLoader(train_set, args.batch_size, True)
+    train_loader = utils.image_loader(train_set, args.batch_size, True)
 
     test_set = utils.ImageDataset(test_file_path, aug_images=False)
-    test_loader = utils.ImageLoader(test_set, args.test_batch_size, False)
+    test_loader = utils.image_loader(test_set, args.test_batch_size, False)
 
     model = utils.Model().to(device)
     loss_func = torch.nn.CrossEntropyLoss(reduction='mean')

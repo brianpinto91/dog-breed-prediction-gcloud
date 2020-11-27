@@ -10,14 +10,6 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, models
 
 
-data_transform = transforms.Compose([
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.476, 0.452, 0.392],
-                             std=[0.235, 0.231, 0.229])
-    ])
-
-
 class ImageDataset(Dataset):
     def __init__(self, h5_file_path, aug_images):
         h5_file = h5py.File(h5_file_path, 'r', libver='latest', swmr=True)
@@ -58,7 +50,7 @@ class ImageDataset(Dataset):
         return image_i, label_i
 
 
-def ImageLoader(dataset, batch_size, shuffle=True):
+def image_loader(dataset, batch_size, shuffle=True):
     return DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
 
 
