@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+        <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+        <meta name="author" content="Brian Pinto">
+        <meta name="description" content="An application to determine the dog breed from an image">
+        <meta name="keywords" content="Dog breed Classifier, Webapp, Google Cloud">
+        <title>App: Dog Breed Classifier: Home</title>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Itim&display=swap">
+        <link rel="stylesheet" href="{{ url_for('static', filename='styles/main.css') }}">
+    </head>
+    <body>
+        <header class="header">
+            <div class="app-heading">
+                <h1>Dog Breed Classifier</h1>
+            </div>
+        </header>
+        <main class=content>
+            {% if page == "home" %}
+                <div class="app-instruction">
+                    <p style="font-family: monospace; color: red;">{{ error_msg }}</p>
+                    <p>Upload an image to determine the dog breed</p>
+                    <form class="image-uploader" action="{{ url_for('home') }}" enctype="multipart/form-data" method="POST">
+                        <p><input type="file" id="img" name="img" accept="images/*"></p>
+                        <p><button type="submit">Predict</button></p>
+                    </form>
+                </div>
+            {% endif %}
+            {% if page == "prediction" %}
+                <div class="image-container">
+                    <img src="{{ uri }}" alt="uploaded image">
+                </div>
+                <div class="result-container">
+                    <p>{{ result }}</p>
+                    <p><b>Breed: </b> {{ breed }}</p>
+                    <p><b>Probability: </b> {{ prob }}</p>
+                </div>
+                <div class="link-home">
+                    <a href="{{  url_for('home') }}">Make a another prediction</a>
+                </div>
+            {% endif %}
+            <div class="app-note">
+                <p>
+                    For information about this <b>App</b> visit:<br/><br/>
+                    <a href="https://brianpinto91.github.io/dog-breed-prediction-gcloud/" target="_blank">
+                        <img src="https://img.shields.io/badge/visit-project%20website-orange.svg?logo=Github" alt="project webiste link logo" style="height:25px;">
+                    </a>
+                </p> 
+            </div>
+        </main>
+        <footer>
+            <div class="footer-wrapper">
+                <div class="copyright-wrapper">
+                    &copy 2020 Brian Pinto
+                </div>
+            </div>
+        </footer>
+</html>
