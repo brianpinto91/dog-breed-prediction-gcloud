@@ -55,7 +55,7 @@ def check_valid_file(image):
 
     ext = filename.rsplit(".", 1)[1]
 
-    return ext.upper() in ['JPG', 'PNG']
+    return ext.upper() in ['JPEG', 'JPG', 'PNG']
 
 
 if __name__ == "__main__":
