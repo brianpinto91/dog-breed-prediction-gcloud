@@ -37,11 +37,9 @@ def home():
                 result = "Here is your result:"
             return render_template("home.html", uri=uri,
                                          page="prediction", result=result, breed=breed, prob=prob)
-        else:
-            return render_template("home.html", page="home", 
+        return render_template("home.html", page="home", 
                                          error_msg="Did you upload a valid file?")
-    else:
-        return render_template("home.html", page="home", error_msg="")
+    return render_template("home.html", page="home", error_msg="")
 
 
 def check_valid_file(image):
@@ -57,10 +55,8 @@ def check_valid_file(image):
 
     ext = filename.rsplit(".", 1)[1]
 
-    if ext.upper() in ['JPG', 'PNG']:
-        return True
-    else:
-        return False
+    return ext.upper() in ['JPG', 'PNG']
+
 
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=5000)

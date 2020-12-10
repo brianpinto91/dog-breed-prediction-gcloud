@@ -109,7 +109,7 @@ def fetch_data_gcloud(data_directory):
     """
 
     try:
-        subprocess.check_call(['gsutil', '-m', 'cp', os.path.join(data_directory, "*"), DATA_DIR])
+        subprocess.check_call(['/root/tools/google-cloud-sdk/bin/gsutil', '-m', 'cp', os.path.join(data_directory, "*"), DATA_DIR])
     except Exception as e:
         print(e)
         print("Could not fetch the data from the gcloud bucket. Check Check if the cloud bucket and path exist!")
@@ -142,7 +142,8 @@ def save_data_gcloud(from_path, gcloud_dest_path):
             from_path (str): local source path
             gcloud_dest_path (str): gcloud bucket and directory as destination path 
     """
-    subprocess.check_call(['gsutil', 'cp', from_path,
+    # specify full location of the gsutil installed path in container to make the code secure 
+    subprocess.check_call(['/root/tools/google-cloud-sdk/bin/gsutil', 'cp', from_path,
                            gcloud_dest_path])
 
 def save_model(save_path, model):

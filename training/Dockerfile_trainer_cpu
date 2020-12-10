@@ -36,6 +36,4 @@ RUN mkdir data && mkdir models && mkdir logs
 #Installs python packages and dependencies
 RUN pip3 install --no-cache-dir -r requirements.txt
 
-WORKDIR /task
-
 ENTRYPOINT ["python", "trainer.py"]

@@ -123,7 +123,8 @@ def test(model, test_loader, loss_func, device):
             predictions = torch.argmax(outputs, dim=1)
             correct_preds += torch.sum(predictions==labels).item()
             running_loss += loss_func(outputs, labels).item()
-    loss = running_loss / (batch_idx + 1)
+    num_of_batches = int(len(test_loader.dataset)/test_loader.batch_size)
+    loss = running_loss / num_of_batches
     accuracy = 100.0 * correct_preds / len(test_loader.dataset)
     return loss, accuracy
 
@@ -169,7 +170,8 @@ def train(args, model, train_loader, test_loader, loss_func, optimizer, device):
                     batch_idx, int(len(train_loader.dataset)/train_loader.batch_size),
                     train_running_loss / (batch_idx+1)), flush=True)
         #logging
-        train_loss = train_running_loss / (batch_idx + 1) 
+        num_of_batches = int(len(train_loader.dataset)/train_loader.batch_size)
+        train_loss = train_running_loss / num_of_batches
         train_accuracy = 100.0 * train_correct_preds / len(train_loader.dataset)
         test_loss, test_accuracy = test(model, test_loader, loss_func, device)
         log_list.append([epoch + 1, train_loss, test_loss, train_accuracy, test_accuracy])
