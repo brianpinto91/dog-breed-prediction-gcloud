@@ -1,0 +1,12 @@
+.dockerignore
+Dockerfile_cpu
+Dockerfile_gpu
+*.ipynb
+.ipynb_checkpoints
+__pycache__/#
+.pyc
+data/*
+logs/*
+models/*
+Makefile
+variables.txt

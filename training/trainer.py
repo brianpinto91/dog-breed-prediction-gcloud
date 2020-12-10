@@ -64,21 +64,21 @@ def get_args():
     parser.add_argument(
         '--data_dir',
         type=str,
-        default='../data',
+        default=utils.DATA_DIR,
         metavar='D',
         help="location of the directory containing train.h5 and test.h5 files"
     )
     parser.add_argument(
         '--model_dir',
         type=str,
-        default='../models',
+        default=utils.MODEL_DIR,
         metavar='MD',
         help="direcory to save the model (default: None)"
     )
     parser.add_argument(
         '--log_dir',
         type=str,
-        default='../logs',
+        default=utils.LOG_DIR,
         metavar='LOG',
         help="location of the directory where the training log is to be saved"
     )
@@ -159,26 +159,27 @@ if __name__ == "__main__":
     args = get_args()
 
     if args.use_cuda:
-        if torch.cuda.is_available():
+        try:
             device = torch.device('cuda')
+        except Exception as e:
+            print("Check if you have correct nvidia driver installed!")
+            print(e)
+            device = None # lets throw error when loading model on device. Do not let run on cpu with gpu resources on cloud!
     else:
         device = torch.device('cpu')
 
     torch.manual_seed(args.seed)
 
-    train_file_path, test_file_path = utils.get_data_paths(args)
+    model = utils.Model().to(device)
 
+    train_file_path, test_file_path = utils.get_data_paths(args)
     train_set = utils.ImageDataset(train_file_path, aug_images=True)
     train_loader = utils.image_loader(train_set, args.batch_size, True)
-
     test_set = utils.ImageDataset(test_file_path, aug_images=False)
     test_loader = utils.image_loader(test_set, args.test_batch_size, False)
 
-    model = utils.Model().to(device)
     loss_func = torch.nn.CrossEntropyLoss(reduction='mean')
     optimizer = torch.optim.Adam(model.fc.parameters(), lr=args.lr)
     model, best_performance_metrics, log_df = train(args, model, train_loader, test_loader, loss_func, optimizer, device)
     utils.save_model(args, model)
-    utils.save_job_log(args, log_df)
-    utils.save_train_metadata(args, best_performance_metrics)
-    
+    utils.save_job_log(args, log_df, best_performance_metrics)

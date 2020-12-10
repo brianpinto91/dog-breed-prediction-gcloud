@@ -9,6 +9,12 @@ import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, models
 
+# local directory to read training data. This will be used to copy from gcloud bucket if training on cloud
+DATA_DIR = "./data"
+
+# local directory to save model and log files temporarily before sending to gcloud buckets
+MODEL_DIR = "./models"
+LOG_DIR = "./logs"
 
 class ImageDataset(Dataset):
     def __init__(self, h5_file_path, aug_images):
@@ -63,57 +69,58 @@ def Model(pretrained=True):
     return model
 
 
-def get_data_paths(args):
-    if args.data_dir[0:2] == "gs":
-        copy_gcloud_data(args)
-    train_file_path = os.path.join("../data", 'train.h5')
-    test_file_path = os.path.join("../data", 'test.h5')
-    return train_file_path, test_file_path
-
-def copy_gcloud_data(args):
+def fetch_data_gcloud(args):
     try:
-        subprocess.check_call(['gsutil', '-m', 'cp', os.path.join(args.data_dir, "*"), "../data"])
+        subprocess.check_call(['gsutil', '-m', 'cp', os.path.join(args.data_dir, "*"), DATA_DIR])
     except Exception as e:
         print(e)
         print("Could not fetch the data from the gcloud bucket. Check Check if the cloud bucket and path exist!")
 
+
+def get_data_paths(args):
+    if args.data_dir[0:2] == "gs":
+        fetch_data_gcloud(args)
+    train_file_path = os.path.join(DATA_DIR, 'train.h5')
+    test_file_path = os.path.join(DATA_DIR, 'test.h5')
+    return train_file_path, test_file_path
+
+def save_data_gcloud(from_path, gcloud_dest_path):
+    subprocess.check_call(['gsutil', 'cp', from_path,
+                           gcloud_dest_path])
+
 def save_model(args, model):
     model_name = "torch_model"
-    local_save_path = os.path.join("../models", model_name)
+    local_save_path = os.path.join(MODEL_DIR, model_name)
     torch.save(model.state_dict(), local_save_path)
     if args.model_dir[0:2] == "gs":
         try:
-            subprocess.check_call(['gsutil', 'cp', local_save_path,
-                                  os.path.join(args.model_dir, model_name)])
+            save_data_gcloud(local_save_path,
+                             os.path.join(args.model_dir, model_name))
         except Exception as e:
             print(e)
             print("Could not save the model to the cloud. Check if the cloud bucket and path exist!")
 
 
-def save_job_log(args, log_df):
+def save_job_log(args, log_df, best_performance_metrics):
     log_file_name = "training_result.csv"
-    local_save_path = os.path.join("../logs", log_file_name)
-    log_df.to_csv(local_save_path, index=False)
-    if args.log_dir[0:2] == "gs":
-        try:
-            subprocess.check_call(['gsutil', 'cp', local_save_path,
-                                  os.path.join(args.log_dir, log_file_name)])
-        except Exception as e:
-            print(e)
-            print("Could not save the log file to the cloud. Check if the cloud bucket and path exist!")
-
-
-def save_train_metadata(args, best_performance_metrics):
     metadata_file_name = "metadata.json"
-    local_save_path = os.path.join("../logs", metadata_file_name)
+    
+    log_save_path = os.path.join(LOG_DIR, log_file_name)
+    log_df.to_csv(log_save_path, index=False)
+
+    metadata_file_name = "metadata.json"
+    metadata_save_path = os.path.join(LOG_DIR, metadata_file_name)
     metadata = vars(args)
     metadata.update(best_performance_metrics)
-    with open(local_save_path, 'w') as outfile:
+    with open(metadata_save_path, 'w') as outfile:
         json.dump(metadata, outfile)
+
     if args.log_dir[0:2] == "gs":
         try:
-            subprocess.check_call(['gsutil', 'cp', local_save_path,
-                                  os.path.join(args.log_dir, metadata_file_name)])
+            save_data_gcloud(log_save_path,
+                             os.path.join(args.log_dir, log_file_name))
+            save_data_gcloud(metadata_save_path,
+                             os.path.join(args.log_dir, metadata_file_name))
         except Exception as e:
             print(e)
-            print("Could not save the metadata file to the cloud. Check if the cloud bucket and path exist!")
+            print("Could not save the log files to the cloud. Check if the cloud bucket and path exist!")

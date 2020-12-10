@@ -1,8 +1,9 @@
 __pycache__/
 *.pyc
-data/Images
-models/
-logs/
+training/data/Images
+training/models/
+training/logs/
 .ipynb_checkpoints
-train.h5
-test.h5
+training/data/train.h5
+training/data/test.h5
+app/models
