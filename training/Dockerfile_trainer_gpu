@@ -38,6 +38,6 @@ RUN mkdir data && mkdir models && mkdir logs
 RUN pip3 install --no-cache-dir -r requirements.txt
 RUN python3 --version
 
-WORKDIR /task/training
+WORKDIR /task
 
 ENTRYPOINT ["python3", "trainer.py"]

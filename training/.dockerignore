@@ -3,10 +3,10 @@ Dockerfile_cpu
 Dockerfile_gpu
 *.ipynb
 .ipynb_checkpoints
-__pycache__/#
+__pycache__/*
 .pyc
-data/*
-logs/*
-models/*
+./data
+./logs
+./models
 Makefile
 variables.txt

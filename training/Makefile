@@ -9,7 +9,7 @@ docker_push_to_gcloud:
 make_bucket:
 	gsutil mb -l ${REGION} gs://${BUCKET_NAME}
 upload_data:
-	gsutil cp data/* ${DATA_DIR}
+	gsutil -m cp data/* ${DATA_DIR}
 gcloud_train_cpu:
 	gcloud ai-platform jobs submit training ${JOB_NAME} \
 		--region ${REGION} \
@@ -29,9 +29,9 @@ gcloud_train_gpu:
   		--master-image-uri ${IMAGE_URI} \
 		-- \
 		--model_dir=${MODELS_DIR} \
-		--epochs=10 \
+		--epochs=30 \
 		--use_cuda \
 		--data_dir=${DATA_DIR} \
-		--batch_size=60 \
-		--test_batch_size=300 \
+		--batch_size=120 \
+		--test_batch_size=400 \
 		--log_dir=${LOGS_DIR}
