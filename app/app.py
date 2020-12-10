@@ -45,6 +45,12 @@ def home():
 
 
 def check_valid_file(image):
+    """Function to check whether the user selected file is a valid image file
+
+        Args:
+            image (html object): file object posted by html form
+    """
+     
     filename = secure_filename(image.filename) 
     if not "." in filename:
         return False

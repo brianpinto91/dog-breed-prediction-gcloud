@@ -3,7 +3,13 @@ import utils
 import torch
 import pandas as pd
 
+
 def get_args():
+    """Function to parse arguments that are used to configure the training job
+
+        Args:
+            None: No explicit function arguments. Arguments are passed through command line
+    """
     parser = argparse.ArgumentParser("training hyperparameters")
 
     parser.add_argument(
@@ -59,7 +65,7 @@ def get_args():
         '--use_cuda',
         action='store_true',
         default=False,
-        help="whether to train on cuda"
+        help="whether to train on gpu"
     )
     parser.add_argument(
         '--data_dir',
@@ -94,6 +100,19 @@ def get_args():
 
 
 def test(model, test_loader, loss_func, device):
+    """Function to evaluate model's perfomance on a test dataset
+
+        Args:
+            model (torch model): a pytorch model
+            test_loader (torch dataloader): a pytorch dataloader object
+            loss_func (torch loss function): a pytorch loss function
+            device (str): to specify whether cpu or gpu is to be used
+
+        Returns:
+            loss (float): loss evaluated according to the loss function for the given model and test data
+            accuracy (float): accuracy of the model on test data
+    """
+
     running_loss = 0.0
     correct_preds = 0
     model.eval()
@@ -110,6 +129,23 @@ def test(model, test_loader, loss_func, device):
 
 
 def train(args, model, train_loader, test_loader, loss_func, optimizer, device):
+    """Function to train a torch model
+
+        Args:
+            args: command line parsed arguments containing training parameters like epochs, log interval
+            model (torch model): a pytorch model (can be pretrained)
+            train_loader (torch dataloader): a pytorch dataloader object representing the train data
+            train_loader (torch dataloader): a pytorch dataloader object representing the test data
+            loss_func (torch loss function): a pytorch loss function from torch.nn module
+            optimizer (torch optimizer): a pytorch optimizer from torch.optim module
+            device (str): to specify whether cpu or gpu is to be used
+
+        Returns:
+            model (torch model): a pytorch model after training
+            best_performance_metrics (dict): the best epoch, its corressponding train and test loss as a dictionary
+            log_df (pandas dataframe): a dataframe containing epoch-wise training and test accuracies and losses 
+    """
+
     best_model_wts = model.state_dict()
     best_test_accuracy = 0.0
     best_epoch = 0
@@ -164,15 +200,15 @@ if __name__ == "__main__":
         except Exception as e:
             print("Check if you have correct nvidia driver installed!")
             print(e)
-            device = None # lets throw error when loading model on device. Do not let run on cpu with gpu resources on cloud!
+            device = None # throw error when loading model on device. Do not let run on cpu with gpu resources on cloud!
     else:
         device = torch.device('cpu')
 
     torch.manual_seed(args.seed)
 
-    model = utils.Model().to(device)
+    model = utils.get_model().to(device)
 
-    train_file_path, test_file_path = utils.get_data_paths(args)
+    train_file_path, test_file_path = utils.get_data_paths(args.data_dir)
     train_set = utils.ImageDataset(train_file_path, aug_images=True)
     train_loader = utils.image_loader(train_set, args.batch_size, True)
     test_set = utils.ImageDataset(test_file_path, aug_images=False)
@@ -181,5 +217,5 @@ if __name__ == "__main__":
     loss_func = torch.nn.CrossEntropyLoss(reduction='mean')
     optimizer = torch.optim.Adam(model.fc.parameters(), lr=args.lr)
     model, best_performance_metrics, log_df = train(args, model, train_loader, test_loader, loss_func, optimizer, device)
-    utils.save_model(args, model)
-    utils.save_job_log(args, log_df, best_performance_metrics)
+    utils.save_model(args.model_dir, model)
+    utils.save_job_log(args.log_dir, log_df, best_performance_metrics)
