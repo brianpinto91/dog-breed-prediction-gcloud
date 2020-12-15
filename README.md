@@ -8,6 +8,7 @@ Using custom containers on gcloud ai-platform to train a dog breed classifier mo
 ## Table of Contents
 * [Motivation](#motivation)
 * [Implementation](#implementation)
+* [Usage](#installation)
 * [Technologies](#technologies)
 * [License](#license)
 
@@ -19,6 +20,23 @@ Cloud platforms offer great tools to manage end to end machine learning projects
 
 ## Implementation
 
+There are two parts in this project. The first one is deploying a training job on [GoogleCloud ai-platform][gcloud_link]. And the second part is using the trained model to serve predictions by deploying it on [GoogleCloud app engine][gcloud_link]
+
+### Model training on GoogleCloud
+
+There are different ways to deploy a training job on GoogleCloud ai-platform. If you are using Tensorflow, scikit-learn, and XGBoost, then there are configured runtime verisons with required dependencies that can be directly used. However, if you are using Pytorch, as in my case, then [Docker][docker_link] containers can be used to define the dependencies and deploy the training job.
+
+Depending on whether to train on cpu or gpu, I have created [Dockerfile_trainer_cpu](training/Dockerfile_trainer_cpu) and [Dockerfile_trainer_gpu](training/Dockerfile_trainer_gpu) Docker files respectively. The required python packages for model training are specified in the [training/requiremnets.txt](training/requirements.txt) file and is installed when the docker images are built.
+
+The GoogleCloud project variables are defined in the [variables.txt](training/variables.txt) file. Each of these variables need to be exported before submitting the trianing job to GoogleCloud. 
+
+In addition, I have created a [Makefile](training/Makefile) to ahve shortcuts for various tasks like creating GoogleCloud bucket and copying training data to it, building Docker images, pushing built Docker images to Googlecloud container registry, and submitting trianing jobs.
+
+### App deployment on GoogleCloud
+
+The Googlecloud App engine is used for deploying the trained model. The app uses [Flask][flask_link] and is served using the **WSGI** server [Gunicorn][gunicorn_link]. The python package dependencies are specified in [app/requirements.txt] file. The runtime python verison, the entrypoint, and the hardware instance for GoogleCloud app engine is defined in the [app.yaml](app/app.yaml) file. 
+
+## Installation
 
 ## Technologies
 
@@ -30,7 +48,6 @@ Cloud platforms offer great tools to manage end to end machine learning projects
 [<img target="_blank" src="https://number1.co.za/wp-content/uploads/2017/10/gunicorn_logo-300x85.png" height=50>](https://gunicorn.org)
 [<img target="_blank" src="github-page/static/img/docker.png" alt="docker logo" height=60>](https://www.docker.com)
 [<img target="_blank" src="github-page/static/img/Google_Cloud_Logo.svg" alt="gcloud logo" height=40>](https://cloud.google.com)
-
 
 
 ## License
