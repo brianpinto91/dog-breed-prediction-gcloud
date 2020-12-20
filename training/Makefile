@@ -1,7 +1,7 @@
 docker_build_train_image_cpu:
-	docker build -f Dockerfile_cpu -t ${IMAGE_URI} .
+	docker build -f Dockerfile_trianer_cpu -t ${IMAGE_URI} .
 docker_build_train_image_gpu:
-	docker build -f Dockerfile_gpu -t ${IMAGE_URI} .
+	docker build -f Dockerfile_trainer_gpu -t ${IMAGE_URI} .
 docker_run_local_train:
 	docker run ${IMAGE_URI}
 docker_push_to_gcloud:
