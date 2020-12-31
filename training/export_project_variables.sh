@@ -11,4 +11,4 @@ IMAGE_TAG=GPU_V1
 IMAGE_URI=eu.gcr.io/${PROJECT_ID}/${IMAGE_REPO_NAME}:${IMAGE_TAG}
 DATA_DIR=gs://${BUCKET_NAME}/data
 
-set -o allexport
+set +o allexport
