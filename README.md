@@ -3,7 +3,7 @@
 [![GitHub repo size](https://img.shields.io/github/repo-size/brianpinto91/dog-breed-prediction-gcloud?logo=GitHub)]()
 [![CodeFactor Grade](https://img.shields.io/codefactor/grade/github/brianpinto91/dog-breed-prediction-gcloud/main)](https://www.codefactor.io/repository/github/brianpinto91/dog-breed-prediction-gcloud)
 
-This proect is about demonstrating the usage of custom containers on gcloud ai-platform to train a deep learning model.
+This project is about demonstrating the usage of custom containers on gcloud ai-platform to train a deep learning model.
 
 >The hallmark of successful people is that they are always stretching themselves to learn new things - Carol S. Dweck
 
